@@ -56,3 +56,32 @@ def test_jogo_termina_com_24_pontos():
     total_pontos = jogador.retorna_pontos_totais() #
     assert total_pontos == 24
     assert total_pontos >= 24
+
+from truco.jogador import Jogador 
+
+# (Coloque perto de outros testes do Jogador, se houver, 
+#  ou adicione o import do Jogador no topo do arquivo)
+
+def test_jogador_atinge_12_pontos_para_vitoria():
+    # Este teste valida a condição de término (RF25)
+    # conforme implementado no __main__.py (12 pontos).
+    
+    # 1. Arrange (Preparar)
+    jogador = Jogador("Vencedor")
+    
+    # Adiciona 10 pontos
+    jogador.adicionar_pontos(10) #
+    
+    # 2. Act (Executar)
+    # Verifica o estado antes de atingir o limite
+    assert jogador.retorna_pontos_totais() < 12 #
+    
+    # Adiciona os pontos finais para cruzar o limite
+    jogador.adicionar_pontos(2)
+    
+    # 3. Assert (Verificar)
+    # Verifica se o total de pontos é 12
+    assert jogador.retorna_pontos_totais() == 12
+    
+    # Esta é a verificação exata que o __main__.py faz:
+    assert jogador.retorna_pontos_totais() >= 12

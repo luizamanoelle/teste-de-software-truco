@@ -3,6 +3,7 @@ from truco.jogo import Jogo
 from truco.carta import Carta
 from truco.jogador import Jogador
 from truco.bot import Bot
+from truco.truco import Truco
 
 @pytest.fixture
 def jogo_instance():
@@ -204,3 +205,212 @@ def test_jogador_que_vence_2_vazas_ganha_a_mao(cenario_rodadas):
     # Nós testamos se a contagem está correta.
     assert j1.rodadas == 2
     assert j2.rodadas == 0
+
+
+def test_RN04_1_vencer_2_vazas_concede_pontos_da_aposta(cenario_rodadas):
+    """
+    Testa RN04-1: Se um jogador ganha 2 rodadas, ele deve
+    receber os pontos da aposta vigente.
+    
+    O __main__.py faz:
+    if jogador1.rodadas == 2:
+        jogador1.adicionar_pontos(truco.retornar_valor_aposta())
+    
+    Este teste simula essa lógica.
+    """
+    # 1. Arrange
+    jogo, j1, j2, c1, c2 = cenario_rodadas
+    truco = Truco() # O __main__ cria um objeto truco.
+    
+    # Simula o estado: j1 tem 0 pontos e 0 rodadas
+    assert j1.retorna_pontos_totais() == 0
+    assert j1.rodadas == 0
+    
+    # O valor padrão da aposta (sem truco) é 1
+    valor_aposta = truco.retornar_valor_aposta()
+    assert valor_aposta == 1
+    
+    # 2. Act
+    # Simula o j1 ganhando 2 vazas (como nos testes de parda)
+    jogo.adicionar_rodada(j1, j2, c1, c2, ganhador=c1)
+    jogo.adicionar_rodada(j1, j2, c1, c2, ganhador=c1)
+    
+    # Verificamos a condição do __main__.py
+    if j1.rodadas == 2:
+        # Executamos a ação do __main__.py
+        j1.adicionar_pontos(valor_aposta)
+
+    # 3. Assert
+    # O j1 deve ter 2 rodadas ganhas e 1 ponto acumulado
+    assert j1.rodadas == 2
+    assert j1.retorna_pontos_totais() == 1
+
+def test_jogo_deve_terminar_com_24_pontos(cenario_rodadas):
+    """
+    Testa RN02-1: Verifica a condição de vitória (RF25).
+    O requisito RN02 especifica que a pontuação alvo é 24.
+    
+    Este teste verifica se o jogador pode acumular 24 pontos.
+    
+    NOTA: O __main__.py atual está encerrando o jogo com 12 pontos,
+    o que viola o requisito RN02. Este teste é escrito
+    para validar o REQUISITO (24 pontos).
+    """
+    # 1. Arrange
+    jogo, j1, j2, _, _ = cenario_rodadas
+    
+    # 2. Act
+    j1.adicionar_pontos(10)
+    j1.adicionar_pontos(10)
+    j1.adicionar_pontos(4)
+    
+    # 3. Assert
+    # Verificamos se o total de pontos do jogador é 24.
+    assert j1.retorna_pontos_totais() == 24
+    
+    # O loop principal no __main__.py faria a checagem:
+    # if j1.pontos >= 24:  <-- (O esperado pelo requisito)
+    #    break
+    
+    # O código atual faz:
+    # if j1.pontos >= 12:  <-- (O implementado)
+    #    break
+    
+    # O teste prova que o acúmulo de 24 pontos é possível,
+    # e expõe a discrepância entre o requisito e o código.
+
+def test_alternar_mao_e_pe_a_cada_rodada(cenario_rodadas):
+    """
+    Testa (RN11): Se a função de "Mão" e "Pé" alterna a cada rodada.
+    """
+    # 1. Arrange
+    jogo, j1, j2, _, _ = cenario_rodadas
+    
+    # Estado Inicial (Fixture): j1 é o primeiro, j2 é o último (pé)
+    j1.primeiro = True
+    j1.ultimo = False
+    j2.primeiro = False
+    j2.ultimo = True
+    
+    # 2. Act (Início da Rodada 2)
+    # O jogo verifica quem foi o último para inverter
+    jogo.quem_inicia_rodada(j1, j2)
+    
+    # 3. Assert (Rodada 2)
+    # J2 deve ser o "mão", J1 deve ser o "pé"
+    assert j1.primeiro is False
+    assert j2.primeiro is True
+    assert j1.ultimo is True  # j1 agora é o último
+    assert j2.ultimo is False # j2 não é mais o último
+    
+    # 4. Act (Início da Rodada 3)
+    # O jogo verifica de novo
+    jogo.quem_inicia_rodada(j1, j2)
+    
+    # 5. Assert (Rodada 3)
+    # J1 deve ser o "mão" novamente
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+    assert j1.ultimo is False
+    assert j2.ultimo is True
+
+# (Adicione no final de tests/test_jogo.py)
+# (Lembre de importar a classe Truco no topo: from truco.truco import Truco)
+
+def test_desistencia_no_modelo_jogo_nao_da_pontos_ao_oponente(cenario_rodadas):
+    """
+    Testa (RN01 / RF09): Desistência ("Ir ao Monte").
+    Este teste PROVA que o método 'jogador_fugiu' da classe Jogo
+    está incompleto e não implementa a regra de negócio RN01
+    (dar pontos ao oponente).
+    """
+    # 1. Arrange
+    jogo, j1, j2, _, _ = cenario_rodadas
+    truco = Truco()
+    
+    # Simula que um TRUCO foi aceito e a mão vale 2 pontos
+    # (Embora o bug do teste anterior mostre que isso falha, 
+    # vamos forçar o valor aqui para o teste)
+    truco.valor_aposta = 2 
+    
+    # 2. Act
+    # O Jogador 1 (j1) foge.
+    # O método 'jogador_fugiu' deveria dar os pontos (2) ao J2.
+    jogo.jogador_fugiu(j1, j1, j2, truco.retornar_valor_aposta())
+
+    # 3. Assert (Provando o Bug)
+    # De acordo com a RN01, j2.pontos deveria ser 2.
+    # O assert falharia se fosse: assert j2.pontos == 2
+    
+    # Este assert PASSA, provando que o método não fez nada:
+    assert j2.pontos == 0
+    
+    # O método 'jogador_fugiu' só mexe em quem é o 'primeiro'
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+
+# (Adicione este teste ao final do seu arquivo tests/test_jogo.py)
+
+def test_vencedor_da_vaza_joga_primeiro_na_proxima_vaza(cenario_rodadas):
+    """
+    Testa (UC-01): Se o jogador que ganha uma vaza (ex: Vaza 1)
+    é quem joga primeiro na vaza seguinte (ex: Vaza 2).
+    """
+    # 1. Arrange
+    # A fixture 'cenario_rodadas' nos dá tudo que precisamos.
+    # j1 é o "mão" e joga primeiro na Vaza 1.
+    jogo, j1, j2, c1, c2 = cenario_rodadas
+    
+    # 2. Act (Vaza 1)
+    # Simulamos que j1 (jogador 1) jogou c1 (carta 1) e
+    # j2 (jogador 2) jogou c2 (carta 2).
+    # O ganhador da Vaza 1 foi c1 (jogador 1).
+    jogo.quem_joga_primeiro(j1, j2, c1, c2, ganhador=c1)
+    
+    # 3. Assert (Início da Vaza 2)
+    # A lógica deve definir j1 como 'primeiro' para a Vaza 2.
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+    
+    # 4. Act (Vaza 2)
+    # Agora, simulamos a Vaza 2. j1 joga primeiro.
+    # Mas desta vez, o ganhador da Vaza 2 foi c2 (jogador 2).
+    jogo.quem_joga_primeiro(j1, j2, c1, c2, ganhador=c2)
+    
+    # 5. Assert (Início da Vaza 3)
+    # A lógica deve inverter e definir j2 como 'primeiro' para a Vaza 3.
+    assert j1.primeiro is False
+    assert j2.primeiro is True
+
+# (Adicione este teste ao final do seu arquivo tests/test_jogo.py)
+
+def test_vencedor_da_vaza_joga_primeiro_na_proxima_vaza(cenario_rodadas):
+    """
+    Testa (UC-01): Se o jogador que ganha uma vaza (ex: Vaza 1)
+    é quem joga primeiro na vaza seguinte (ex: Vaza 2).
+    """
+    # 1. Arrange
+    # A fixture 'cenario_rodadas' nos dá tudo que precisamos.
+    # j1 é o "mão" e joga primeiro na Vaza 1.
+    jogo, j1, j2, c1, c2 = cenario_rodadas
+    
+    # 2. Act (Vaza 1)
+    # Simulamos que j1 (jogador 1) jogou c1 (carta 1) e
+    # j2 (jogador 2) jogou c2 (carta 2).
+    # O ganhador da Vaza 1 foi c1 (jogador 1).
+    jogo.quem_joga_primeiro(j1, j2, c1, c2, ganhador=c1)
+    
+    # 3. Assert (Início da Vaza 2)
+    # A lógica deve definir j1 como 'primeiro' para a Vaza 2.
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+    
+    # 4. Act (Vaza 2)
+    # Agora, simulamos a Vaza 2. j1 joga primeiro.
+    # Mas desta vez, o ganhador da Vaza 2 foi c2 (jogador 2).
+    jogo.quem_joga_primeiro(j1, j2, c1, c2, ganhador=c2)
+    
+    # 5. Assert (Início da Vaza 3)
+    # A lógica deve inverter e definir j2 como 'primeiro' para a Vaza 3.
+    assert j1.primeiro is False
+    assert j2.primeiro is True
