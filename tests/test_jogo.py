@@ -1,4 +1,3 @@
-# Salve como: tests/test_jogo.py
 import pytest
 from truco.jogo import Jogo
 from truco.carta import Carta
@@ -173,9 +172,6 @@ def test_desistencia_no_modelo_jogo_nao_da_pontos_ao_oponente_RN01(cenario_rodad
     # O assert que prova o BUG (o que o código realmente faz):
     # assert j2.retorna_pontos_totais() == 0
 
-# Adicione este teste ao final de tests/test_jogo.py
-# (Lembre de importar 'Carta' no topo do arquivo: from truco.carta import Carta)
-
 @pytest.mark.xfail(reason="BUG: A falha em detectar pardas (RN03) quebra o fluxo do jogo.")
 def test_bug_empate_quebra_regra_parda_RN03(cenario_rodadas):
     """
@@ -237,7 +233,6 @@ def test_bug_empate_quebra_regra_parda_RN03(cenario_rodadas):
 
 def test_jogo_init_estado_inicial_correto():
     """
-    Testa (Objetivo: Retorno de Função / __init__):
     Verifica se a classe Jogo é instanciada com os valores padrão corretos.
    
     """
@@ -250,7 +245,6 @@ def test_jogo_init_estado_inicial_correto():
 
 def test_criar_jogador_retorna_jogador_com_mao(cenario_distribuicao):
     """
-    Testa (Objetivo: Chamada de Função):
     Verifica se 'criar_jogador' retorna uma instância de Jogador
     e se a mão do jogador foi criada (tem 3 cartas).
    
@@ -269,7 +263,6 @@ def test_criar_jogador_retorna_jogador_com_mao(cenario_distribuicao):
 
 def test_criar_bot_retorna_bot_com_mao(cenario_distribuicao):
     """
-    Testa (Objetivo: Chamada de Função):
     Verifica se 'criar_bot' retorna uma instância de Bot
     e se a mão do bot foi criada (tem 3 cartas).
    
@@ -288,7 +281,6 @@ def test_criar_bot_retorna_bot_com_mao(cenario_distribuicao):
 
 def test_adicionar_rodada_caminhos_if_else(cenario_rodadas):
     """
-    Testa (Objetivo: Testes para if's):
     Verifica todos os caminhos de retorno (1, 2, "Erro")
     da função 'adicionar_rodada'.
    
@@ -430,9 +422,6 @@ def test_verificar_ganhador_chama_interface(cenario_rodadas): # Remova o 'monkey
     
     iface = MockInterface()
     
-    # --- A CORREÇÃO ---
-    # Em vez de 'monkeypatch', nós simplesmente *damos*
-    # ao nosso objeto mock a função de espião.
     iface.mostrar_carta_ganhadora = spy_mostrar_carta_ganhadora
     # ------------------
     

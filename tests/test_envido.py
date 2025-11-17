@@ -1,4 +1,3 @@
-# Salve como: tests/test_envido.py
 import pytest
 from truco.jogador import Jogador
 from truco.bot import Bot
@@ -6,8 +5,6 @@ from truco.carta import Carta
 from truco.envido import Envido
 from truco.interface import Interface
 from truco.flor import Flor
-
-# --- Testes de Fluxo de Envido (UC-03) ---
 
 def test_envido_aceito_da_pontos_ao_vencedor_UC03(cenario_envido, monkeypatch):
     """
@@ -65,7 +62,6 @@ def test_envido_empate_ganha_o_mao_RN10(cenario_envido, monkeypatch):
     assert j1.pontos == 2 # Ganha os 2 pontos da aposta
     assert j2.pontos == 0
 
-# --- Testes de Bugs de Interação (Envido vs Flor) ---
 
 @pytest.mark.xfail(reason="BUG: envido.py não checa o estado de 'flor' antes de rodar. [RN09]")
 def test_flor_anula_envido_em_andamento_RN09(cenario_envido, monkeypatch):
@@ -126,9 +122,6 @@ def test_bot_chama_envido_mas_humano_tem_flor_RN09(cenario_envido, monkeypatch):
     assert j2.pontos == 2
     assert j1.pontos == 0
     assert envido.quem_venceu_envido == 2
-
-# Em: tests/test_envido.py
-# (Adicione estes dois testes no final do arquivo)
 
 @pytest.mark.xfail(reason="BUG: RN10 diz que Real Envido vale 3, mas envido.py (linha 105) implementa 5.")
 def test_real_envido_aceito_vale_3_pontos_RN10(cenario_envido, monkeypatch):

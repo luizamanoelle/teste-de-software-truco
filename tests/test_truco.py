@@ -1,11 +1,9 @@
-# Salve como: tests/test_truco.py
 import pytest
 from truco.bot import Bot
-from truco.truco import Truco # Necessário para o monkeypatch
+from truco.truco import Truco 
 import types
 
 # --- Testes de Casos de Uso e Apostas (UC-02) ---
-
 @pytest.mark.xfail(reason="BUG: truco.py (linha 78, 'pedir_truco') não atualiza self.valor_aposta para 2 quando o truco é aceito. [RN08]")
 def test_truco_aceito_aumenta_valor_aposta_RN08(cenario_truco, monkeypatch):
     """

@@ -1,10 +1,8 @@
-# Salve como: tests/test_interface.py
-
 import pytest
 from truco.jogador import Jogador
 from truco.carta import Carta
 from truco.interface import Interface
-import os # <--- CORREÇÃO: Necessário para testar os.system
+import os 
 import types
 
 @pytest.fixture
@@ -112,9 +110,6 @@ def test_interface_placar_desistencia_RF09(iface_e_jogadores, capsys):
     # o placar NÃO foi exibido.
     assert "Pontos Acumulados" not in captured.out
 
-# Em: tests/test_interface.py
-# (Adicione este teste no final do arquivo)
-
 def test_interface_mensagem_erro_truco_repetido(iface_e_jogadores, capsys):
     """
     Testa (Mensagem de Erro): Se a interface exibe a mensagem
@@ -164,7 +159,6 @@ def test_interface_mostrar_jogador_opcoes(iface_e_jogadores, capsys):
     captured = capsys.readouterr()
     assert "Jogador 1 é mão" in captured.out
 
-# --- Testes de Chamadas de Função (Objetivo 5) ---
 
 def test_limpar_tela_chama_os_system_com_clear(iface_e_jogadores, monkeypatch):
     """
@@ -184,7 +178,6 @@ def test_limpar_tela_chama_os_system_com_clear(iface_e_jogadores, monkeypatch):
     iface.limpar_tela()
     assert chamado_com == "clear"
 
-# --- Testes de Lógica de Formatação (border_msg) (Objetivo 4, 5) ---
 
 def test_border_msg_calcula_largura_se_width_none(iface_e_jogadores, capsys):
     """
@@ -225,7 +218,6 @@ def test_border_msg_inclui_titulo_e_sublinhado(iface_e_jogadores, capsys):
     assert "║ TITULO ║" in output
     assert "║ ------ ║" in output
 
-# --- Testes de Desenho de Cartas (Objetivo 4, 5) ---
 
 @pytest.mark.parametrize("naipe, simbolo_esperado", [
     ("ESPADAS", "♠"),

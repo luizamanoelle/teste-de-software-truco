@@ -1,4 +1,3 @@
-# Salve como: tests/test_baralho.py
 import pytest
 from truco.baralho import Baralho
 from truco.carta import Carta
@@ -27,7 +26,7 @@ def test_embaralhar_muda_a_ordem_RF02(baralho: Baralho):
 
     # Garante que os baralhos contêm as mesmas cartas
     assert set(cartas_antes) == set(cartas_depois)
-    # Garante que a ordem mudou (estatisticamente muito provável)
+    # Garante que a ordem mudou
     assert cartas_antes != cartas_depois
 
 def test_garantir_que_cartas_nao_se_repetem_RNF04(baralho):
@@ -41,9 +40,7 @@ def test_garantir_que_cartas_nao_se_repetem_RNF04(baralho):
     # as 40 cartas criadas pela função 'criar_baralho'
     
     # 2. Act
-    # Criamos uma representação em string de cada carta (ex: "7-OUROS")
-    # (Os objetos 'Carta'
-    # em si não são 'hashable' para um 'set')
+    # Criamos uma representação em string de cada carta para usar o 'set'
     representacao_cartas = [f"{c.numero}-{c.naipe}" for c in baralho.cartas]
     
     # 3. Assert
@@ -53,7 +50,6 @@ def test_garantir_que_cartas_nao_se_repetem_RNF04(baralho):
     # Verificamos se o número de cartas ÚNICAS (usando um 'set') também é 40
     assert len(set(representacao_cartas)) == 40
 
-# Adicione ao final de: tests/test_baralho.py
 
 def test_retirar_carta_de_baralho_vazio_levanta_excecao(baralho):
     """Testa (Exceção): Tentar retirar 41 cartas levanta IndexError."""
@@ -69,6 +65,7 @@ def test_retirar_carta_de_baralho_vazio_levanta_excecao(baralho):
     # Garante que o baralho está vazio
     assert len(baralho.cartas) == 0
     
+    # 2. Act & 3. Assert (combinados para exceções)
     # Verifica se a 41ª retirada levanta a exceção esperada
     with pytest.raises(IndexError):
         baralho.retirar_carta()

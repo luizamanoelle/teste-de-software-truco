@@ -1,5 +1,3 @@
-# Salve como: tests/test_integracao_main.py
-
 import pytest
 from truco.carta import Carta
 from truco.jogador import Jogador
@@ -14,8 +12,7 @@ from truco.baralho import Baralho # Importação necessária
 
 # Importa as funções que queremos testar do __main__
 # (Isso é complexo porque o __main__ não foi feito para ser importado)
-# Vamos recriar o ambiente do __main__
-# --- Teste de Integração (Testando o "Remendo") ---
+# recria o ambiente do __main__
 
 def test_integracao_main_bloqueia_envido_com_flor(cenario_main, monkeypatch):
     """
@@ -109,8 +106,6 @@ def test_integracao_vitoria_encerra_jogo_RF25(cenario_main, monkeypatch):
     assert pontos_depois == 12
     assert vitoria_detectada is True # O 'break' teria sido chamado!
 
-# Adicione este teste ao seu arquivo tests/test_integração_main.py
-# (Lembre de importar 'Carta' no topo, se ainda não o fez)
 
 def test_integracao_main_bloqueia_flor_apos_vaza1_RN09(cenario_main, monkeypatch):
     """
@@ -152,10 +147,6 @@ def test_integracao_main_bloqueia_flor_apos_vaza1_RN09(cenario_main, monkeypatch
     # e a flor.pedir_flor NÃO deve ter sido chamada.
     assert foi_chamada is False
 
-
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo)
-
 def test_integracao_main_bloqueia_envido_apos_vaza1_RN10(cenario_main, monkeypatch):
     """
     Testa (RN10): Se o 'remendo' no __main__.py
@@ -194,8 +185,6 @@ def test_integracao_main_bloqueia_envido_apos_vaza1_RN10(cenario_main, monkeypat
     # e envido.controlador_envido NÃO deve ter sido chamado.
     assert foi_chamada is False
 
-# Em: tests/test_integracao_main.py
-# (Adicione este teste no final do arquivo)
 
 def test_distribuicao_nao_e_alternada_RF03(cenario_main):
     """
@@ -248,9 +237,6 @@ def test_distribuicao_nao_e_alternada_RF03(cenario_main):
     # J1: [6 de ESPADAS, 5 de ESPADAS, 4 de ESPADAS]
     # J2: [3 de ESPADAS, 2 de ESPADAS, 1 de ESPADAS]
 
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo)
-
 def test_integracao_bot_nao_mostra_mao_RF04(cenario_main, monkeypatch, capsys):
     """
     Testa (RF04): Se o turno do bot ('turno_do_bot')
@@ -283,8 +269,6 @@ def test_integracao_bot_nao_mostra_mao_RF04(cenario_main, monkeypatch, capsys):
     # (ela só é mostrada no loop principal, não no 'turno_do_bot')
     assert "12 de COPAS" not in captured.out
 
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo)
 
 def test_integracao_main_impede_jogada_fora_de_turno_RNF01(cenario_main, monkeypatch):
     """
@@ -331,9 +315,6 @@ def test_integracao_main_impede_jogada_fora_de_turno_RNF01(cenario_main, monkeyp
     
     # Prova que o jogo NÃO chamou o turno do Humano (RNF01)
     assert foi_chamado_turno_humano is False
-
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo. Lembre de importar 'Carta' no topo)
 
 def test_integracao_main_so_joga_uma_carta_por_vaza_RF05(cenario_main, monkeypatch):
     """
@@ -396,9 +377,6 @@ def test_integracao_main_so_joga_uma_carta_por_vaza_RF05(cenario_main, monkeypat
     
     # Prova que a carta foi realmente jogada
     assert len(j1.mao) == 2
-
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo)
 
 def test_integracao_main_desistencia_da_pontos_ao_oponente_RN01_RF09(cenario_main, monkeypatch):
     """
@@ -525,8 +503,6 @@ def test_integracao_main_reiniciar_jogo_reseta_estado_RF27(cenario_main):
     # Baralho foi resetado (40) e 6 cartas foram dadas?
     assert len(baralho.cartas) == 34
 
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo)
 
 def test_integracao_main_input_invalido_mostra_erro_RF_ERR(cenario_main, monkeypatch, capsys):
     """
@@ -569,8 +545,6 @@ def test_integracao_main_input_invalido_mostra_erro_RF_ERR(cenario_main, monkeyp
     # Prova que a mensagem de erro foi exibida
     assert "Selecione um valor válido!" in captured.out
 
-# Em: tests/test_integração_main.py
-# (Adicione este teste no final do arquivo)
 
 def test_integracao_main_input_nao_numerico_levanta_valueerror(cenario_main, monkeypatch):
     """

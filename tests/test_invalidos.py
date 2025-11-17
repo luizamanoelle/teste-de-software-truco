@@ -1,6 +1,3 @@
-# Salve como: tests/test_cenarios_invalidos.py
-# (Anteriormente test_regras.py)
-
 import pytest
 from truco.jogador import Jogador
 from truco.bot import Bot
@@ -14,7 +11,7 @@ from truco.interface import Interface
 def test_envido_nao_pode_ser_jogado_apos_primeira_vaza_RN10(cenario_regras_invalidas, monkeypatch):
     """
     Testa (RN10): Não pode chamar Envido após a primeira vaza.
-    BUG: O modelo 'Envido' não sabe o que é uma 'vaza'.
+    O modelo 'Envido' não sabe o que é uma 'vaza'.
     """
     j1, j2, truco, envido, flor, iface, cbr, dados = cenario_regras_invalidas
     
@@ -36,7 +33,7 @@ def test_envido_nao_pode_ser_jogado_apos_primeira_vaza_RN10(cenario_regras_inval
     # O Envido não deveria rodar (resultado == None)
     assert resultado_envido is None
     
-    # O assert que prova o BUG (o código roda e dá pontos):
+    # O assert que prova o (o código roda e dá pontos):
     # assert resultado_envido is True
     # assert j1.pontos == 2
 
@@ -59,7 +56,7 @@ def test_truco_nao_pode_ser_jogado_com_envido_pendente_RN08(cenario_regras_inval
     # O Truco não deveria rodar (resultado == None)
     assert resultado_truco is None
 
-    # O assert que prova o BUG (o código roda):
+    # (o código roda):
     # assert resultado_truco is True
     # assert truco.estado_atual == "truco"
 
@@ -67,7 +64,7 @@ def test_truco_nao_pode_ser_jogado_com_envido_pendente_RN08(cenario_regras_inval
 def test_flor_nao_pode_ser_jogada_apos_primeira_vaza_RN09(cenario_regras_invalidas, monkeypatch):
     """
     Testa (RN09): Não pode chamar Flor após a primeira vaza.
-    BUG: O modelo 'Flor' não sabe o que é uma 'vaza'
+     O modelo 'Flor' não sabe o que é uma 'vaza'
     (ele não checa o len(mao)).
     """
     # 1. Arrange

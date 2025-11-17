@@ -1,4 +1,3 @@
-# Salve como: tests/conftest.py
 # Este arquivo centraliza todas as fixtures (cenários de teste)
 # para garantir que cada teste seja independente.
 
@@ -13,22 +12,21 @@ from truco.flor import Flor
 from truco.jogo import Jogo
 from truco.interface import Interface
 
-# --- Mocks (Simuladores) ---
+#SIMULA MOCKS
 
+#permite que os testes de logica nao dependam da logica complexa do bot
 @pytest.fixture
 def mock_cbr():
     """Simula o CBR, configurado para sempre 'Aceitar' por padrão."""
     class MockCBR:
         
-        # CORREÇÃO: Renomeie 'truco' para 'avaliar_truco'
-        def avaliar_truco(self, *args): 
+        def truco(self, *args): 
             return 1  # 1 = Aceitar
         
-        # CORREÇÃO: Renomeie 'envido' para 'avaliar_envido'
-        def avaliar_envido(self, *args): 
+        def envido(self, *args): 
             return 1  # 1 = Aceitar
         
-        def jogar_carta(self, *args):
+        def carta(self, *args):
             return 0 # Sempre joga a primeira carta
 
     return MockCBR()
@@ -36,6 +34,7 @@ def mock_cbr():
 @pytest.fixture
 def mock_dados():
     """Simula a classe de Dados, não faz nada."""
+    #impede que os testes tente ler ou escrever arquivos
     class MockDados:
         def __getattr__(self, name):
             return lambda *args, **kwargs: None
@@ -46,7 +45,7 @@ def iface():
     """Fornece uma instância real da Interface."""
     return Interface()
 
-# --- Fixtures de Cenário Base ---
+# CENÁRIOS DE BASE
 
 @pytest.fixture
 def cenario_base(iface, mock_cbr, mock_dados):
@@ -65,8 +64,6 @@ def cenario_distribuicao():
     j1 = Jogador("Humano")
     bot = Bot("Robô")
     return baralho, j1, bot
-
-# --- Fixtures de Cenários de Jogo e Apostas ---
 
 @pytest.fixture
 def cenario_rodadas(cenario_base):
@@ -132,15 +129,15 @@ def cenario_regras_invalidas(cenario_base):
 def cenario_main(monkeypatch):
     """
     Recria o ambiente de objetos globais que o __main__.py espera.
-    Isso nos permite testar as funções turno_do_humano e turno_do_bot.
+    permite testar as funções turno_do_humano e turno_do_bot.
     """
     # 1. Cria todas as instâncias que o __main__ cria
     baralho = Baralho()
     
     # Mock do CBR e Dados (para não depender de arquivos)
     class MockCBR:
-        def truco(self, *args): return 1 # Aceitar (Mude de 'truco')
-        def envido(self, *args): return 1 # Aceitar (Mude de 'envido')
+        def truco(self, *args): return 1 
+        def envido(self, *args): return 1 
         def carta(self, *args): return 0
     
     class MockDados:
@@ -158,7 +155,7 @@ def cenario_main(monkeypatch):
     jogador1 = Jogador("Humano")
     jogador2 = Bot("Robô")
     
-    # 3. Importa as funções do __main__ (truque para "injeta" as variáveis)
+    # 3. Importa as funções do __main__ para o escopo do teste
     # Precisamos "enganar" o __main__ para que ele use nossos objetos
     
     # Para este teste, vamos focar em testar o FLUXO, não o __main__

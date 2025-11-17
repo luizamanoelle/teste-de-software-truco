@@ -1,4 +1,3 @@
-# Salve como: tests/test_jogador.py
 import pytest
 from truco.jogador import Jogador
 from truco.carta import Carta
@@ -95,9 +94,6 @@ def test_jogar_carta_que_nao_esta_na_mao_levanta_excecao():
     with pytest.raises(IndexError):
         jogador.jogar_carta(10)
 
-# Adicione ao final de: tests/test_jogador.py
-# (Você precisará de: from truco.carta import Carta)
-
 @pytest.mark.parametrize("mao, pontos_esperados", [
     ([], 0), # Mão vazia (início do loop)
     ([Carta(7, "OUROS")], 7), # Mão com 1 carta (início do loop)
@@ -121,7 +117,6 @@ def test_calculo_envido_com_mao_incompleta_RN10(mao, pontos_esperados):
 
 def test_jogador_init_estado_inicial_correto():
     """
-    Testa (Objetivo: Retorno de Função / __init__):
     Verifica se a classe Jogador é instanciada com os valores padrão corretos.
     """
     # 1. Arrange / Act
@@ -137,7 +132,6 @@ def test_jogador_init_estado_inicial_correto():
 
 def test_simples_setters_e_getters_RF25():
     """
-    Testa (Objetivo: Retorno de Função):
     Verifica a funcionalidade básica de métodos simples de set/get.
     """
     # 1. Arrange
@@ -159,7 +153,6 @@ def test_simples_setters_e_getters_RF25():
 
 def test_resetar_limpa_estado_da_rodada():
     """
-    Testa (Objetivo: Retorno de Função / Estado):
     Verifica se 'resetar' retorna o objeto ao seu estado padrão
     após ter sido modificado.
     """

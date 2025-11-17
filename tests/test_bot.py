@@ -1,4 +1,3 @@
-# Salve como: tests/test_bot.py
 import pytest
 from truco.carta import Carta
 
@@ -6,17 +5,11 @@ from truco.carta import Carta
 def test_bot_tem_3_cartas_RF03(cenario_distribuicao):
     baralho, j1, bot = cenario_distribuicao
     
-    # Ação: Bot cria sua mão
+    # Act: Bot cria sua mão
     bot.criar_mao(baralho) 
     
     # Verifica se o bot tem 3 cartas na mão
     assert len(bot.mao) == 3
-
-# Adicione estes testes ao seu arquivo tests/test_bot.py
-# (Lembre de importar 'Carta' no topo: from truco.carta import Carta)
-
-# Adicione estes testes ao seu arquivo tests/test_bot.py
-# (Lembre de importar 'Carta' no topo: from truco.carta import Carta)
 
 def test_bot_avalia_envido_passa_pontos_corretos_ao_cbr_RF20(cenario_main, monkeypatch):
     """

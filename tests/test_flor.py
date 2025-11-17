@@ -1,10 +1,8 @@
-# Salve como: tests/test_flor.py
 import pytest
 from truco.carta import Carta
 from truco.flor import Flor
 
 # --- Testes de Fluxo de Flor (UC-03 / RN09) ---
-
 def test_flor_simples_da_3_pontos_RN09(cenario_flor):
     """
     Testa (RN09): Cantar Flor (oponente não tem) vale 3 tentos.
@@ -75,7 +73,6 @@ def test_flor_contraflor_recusada_da_3_pontos_ao_bot_RN09(cenario_flor, monkeypa
     # J1 (Humano) canta Flor
     flor.pedir_flor(1, j1, j2, iface)
 
-    # O código em flor.py (linha 45) dá 3 pontos ao J2 se J1 recusa.
     assert j1.pontos == 0
     assert j2.pontos == 3
     assert flor.quem_venceu_flor == 0

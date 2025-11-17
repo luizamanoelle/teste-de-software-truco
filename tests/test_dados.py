@@ -5,16 +5,12 @@ from unittest import mock
 from truco.dados import Dados
 from truco.carta import Carta
 from pathlib import Path
-# imports adicionais necessários
 import types 
 
-# --- Fixtures de Mocking e Dados ---
-
-# ... (Mocks e Fixtures mantidos do passo anterior para contexto) ...
 
 @pytest.fixture(scope="session")
 def colunas():
-    # Lista completa de 55 colunas do SUT
+    # Lista completa de 55 colunas que o registro da mão e a base de casos devem ter.
     return ['idMao', 'jogadorMao', 'cartaAltaRobo', 'cartaMediaRobo', 'cartaBaixaRobo', 
             'cartaAltaHumano', 'cartaMediaHumano', 'cartaBaixaHumano', 'primeiraCartaRobo', 
             'primeiraCartaHumano', 'segundaCartaRobo', 'segundaCartaHumano', 'terceiraCartaRobo', 
@@ -32,7 +28,7 @@ def colunas():
 
 @pytest.fixture
 def df_modelo_zerado(colunas):
-    """Retorna um DataFrame mockado para simular o modelo zerado (1x55)."""
+    """Retorna um DataFrame mockado para simular o modelo zerado (1x55) inicial."""
     return pd.DataFrame([0] * len(colunas), index=colunas).T.set_index(pd.Index([0], name='idMao'))
 
 @pytest.fixture
@@ -68,23 +64,21 @@ def dados(monkeypatch, df_modelo_zerado, df_casos_inicial):
     return Dados()
 
 
-# --- Testes de Setters (Objetivos: Tipo, Retorno) ---
-
 def test_dados(dados, colunas):
-    """Verifica se o construtor do Dados inicializa todos os atributos e colunas."""
+    #verifica se dolunas registros e dados estao corretos foram inicializados e sao do df
     assert dados.colunas == colunas
     assert isinstance(dados.registro, pd.DataFrame)
     assert isinstance(dados.casos, pd.DataFrame)
     assert dados.registro.shape == (1, len(colunas))
 
 def test_carregar_modelo_zerado(dados, df_modelo_zerado):
-    """Verifica se o modelo zerado é carregado com as colunas corretas."""
+    #garante as 55 col, que o indice e as ordens estão corretas
     assert dados.registro.shape == (1, len(dados.colunas))
     assert dados.registro.index.to_list() == [0]
     assert dados.registro.columns.to_list() == dados.colunas
 
 def test_tratamento_inicial_df(dados):
-    """Verifica se o tratamento de dados (casos) é executado corretamente (limpeza e tipos)."""
+    #verifica se as colunas categoricas foram convertidas para int e os dados limpos
     df = dados.retornar_casos()
     assert df.shape[0] == 2
     assert df['naipeCartaAltaRobo'].dtype == 'int16'
@@ -176,7 +170,6 @@ def test_retornar_casos(dados):
 
 def test_resetar(dados, df_modelo_zerado, df_casos_inicial):
     """Verifica se resetar carrega novamente o modelo zerado e a base de casos."""
-    
     dados.resetar()
     assert dados.registro.equals(df_modelo_zerado)
     assert not dados.casos.empty
