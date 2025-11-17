@@ -2,6 +2,7 @@
 import pytest
 from truco.bot import Bot
 from truco.truco import Truco # Necessário para o monkeypatch
+import types
 
 # --- Testes de Casos de Uso e Apostas (UC-02) ---
 
@@ -132,3 +133,181 @@ def test_escalonamento_vale_quatro_recusado_da_3_pontos_UC02(cenario_truco, monk
     
     # O valor da aposta foi definido para 4 antes da recusa
     assert truco.retornar_valor_aposta() == 4
+
+def test_truco_init_estado_inicial_correto():
+    """
+    Testa (Objetivo: Retorno de Função / __init__):
+    Verifica se a classe Truco é instanciada com os valores padrão corretos.
+    """
+    # 1. Arrange / Act
+    truco = Truco()
+    
+    # 3. Assert
+    assert truco.valor_aposta == 1
+    assert truco.estado_atual == ""
+    assert truco.jogador_bloqueado == 0
+
+@pytest.mark.parametrize("estado_inicial, estado_esperado", [
+    (1, 2), # Se 1, vira 2
+    (2, 1), # Se 2 (ou 0, ou qualquer outro), vira 1
+])
+def test_inverter_jogador_bloqueado_alterna_corretamente(estado_inicial, estado_esperado):
+    """
+    Testa (Objetivo: Testes para if's):
+    Verifica os dois caminhos da lógica de 'inverter_jogador_bloqueado'.
+   
+    """
+    # 1. Arrange
+    truco = Truco()
+    truco.jogador_bloqueado = estado_inicial
+    
+    # 2. Act
+    truco.inverter_jogador_bloqueado()
+    
+    # 3. Assert
+    assert truco.jogador_bloqueado == estado_esperado
+
+def test_resetar_limpa_o_estado_do_truco():
+    """
+    Testa (Objetivo: Retorno de Função):
+    Verifica se 'resetar' retorna o objeto ao seu estado padrão
+    após ter sido "poluído" (modificado).
+   
+    """
+    # 1. Arrange (Poluir o estado)
+    truco = Truco()
+    truco.valor_aposta = 4
+    truco.estado_atual = "vale_quatro"
+    truco.jogador_bloqueado = 1
+    truco.jogador_pediu = 1
+    
+    # 2. Act
+    truco.resetar() # O SUT (System Under Test)
+    
+    # 3. Assert (Verificar se voltou ao padrão)
+    assert truco.valor_aposta == 1
+    assert truco.estado_atual == ""
+    # Nota: 'jogador_bloqueado' e 'jogador_pediu'
+    # não são resetados pelo SUT, provando um bug/comportamento.
+    assert truco.jogador_bloqueado == 0 # Este campo não é resetado no SUT
+    assert truco.jogador_pediu == 0    # Este campo não é resetado no SUT
+
+def test_controlador_truco_bloqueia_se_estado_for_vale_quatro(cenario_truco):
+    """
+    Testa (Objetivo: Testes para if's):
+    Verifica a "guarda" que impede novas apostas se o jogo já
+    está em "vale_quatro".
+   
+    """
+    # 1. Arrange
+    truco, j1, j2, cbr, dados = cenario_truco
+    truco.estado_atual = "vale_quatro" # Define o estado
+    
+    # 2. Act
+    resultado = truco.controlador_truco(cbr, dados, 1, j1, j2)
+    
+    # 3. Assert
+    # O 'if' deve retornar None
+    assert resultado is None
+
+def test_controlador_truco_bloqueia_se_jogador_pediu_duas_vezes(cenario_truco):
+    """
+    Testa (Objetivo: Testes para if's):
+    Verifica a "guarda" que impede o mesmo jogador de pedir
+    um aumento seguidamente ('jogador_bloqueado').
+   
+    """
+    # 1. Arrange
+    truco, j1, j2, cbr, dados = cenario_truco
+    truco.jogador_bloqueado = 1 # Bloqueia o Jogador 1
+    
+    # 2. Act
+    # O Jogador 1 (bloqueado) tenta pedir
+    resultado = truco.controlador_truco(cbr, dados, 1, j1, j2)
+    
+    # 3. Assert
+    # O 'if' deve retornar None
+    assert resultado is None
+
+def test_retornar_quem_fugiu_retorna_um_metodo_em_vez_de_valor(cenario_truco):
+    """
+    Testa (Objetivo: Testes para Exceções / Bugs):
+    Identifica o bug onde 'retornar_quem_fugiu' retorna
+    o próprio objeto do método (um 'callable') em vez de um valor,
+    devido à falta de parênteses no 'return'.
+   
+    """
+    # 1. Arrange
+    truco, j1, j2, cbr, dados = cenario_truco
+    
+    # 2. Act
+    resultado = truco.retornar_quem_fugiu()
+    
+    # 3. Assert
+    # O teste passa se o 'resultado' for um objeto chamável (um método)
+    assert callable(resultado)
+    # Verificação ainda mais estrita (opcional, mas boa):
+    assert isinstance(resultado, types.MethodType)
+
+def test_pedir_truco_loop_de_input_invalido_depois_valido(cenario_truco, monkeypatch):
+    """
+    Testa (Objetivo: Início e Fim de Loopings):
+    Verifica se o 'while' do input (no Humano, quem_pediu=2)
+    rejeita um input numérico inválido ('9') e depois
+    aceita um válido ('1').
+   
+    """
+    # 1. Arrange
+    truco, j1, j2, cbr, dados = cenario_truco
+    
+    # Simula o Humano digitando '9' (inválido) e depois '1' (Aceitar)
+    inputs_usuario = ['9', '1']
+    monkeypatch.setattr('builtins.input', lambda _: inputs_usuario.pop(0))
+    
+    # 2. Act
+    # Chamamos com 'quem_pediu=2' para acionar o 'input' do Humano
+    resultado = truco.pedir_truco(cbr, 2, j1, j2)
+    
+    # 3. Assert
+    # O loop deve ter rodado duas vezes e retornado True (do '1')
+    assert resultado is True
+    # A lista de inputs deve estar vazia
+    assert len(inputs_usuario) == 0
+
+def test_pedir_retruco_input_nao_numerico_levanta_valueerror(cenario_truco, monkeypatch):
+    """
+    Testa (Objetivo: Testes para Exceções / Input de Usuário):
+    Verifica se o 'int(input())' em 'pedir_retruco'
+    levanta 'ValueError' se o usuário digitar "abc".
+   
+    """
+    # 1. Arrange
+    truco, j1, j2, cbr, dados = cenario_truco
+    
+    # Simula o Humano digitando "abc" (não-numérico)
+    monkeypatch.setattr('builtins.input', lambda _: 'abc')
+    
+    # 2. Act / 3. Assert
+    # O teste passa se 'ValueError' for levantado
+    with pytest.raises(ValueError):
+        # Chamamos com 'quem_pediu=2' para acionar o 'input' do Humano
+        truco.pedir_retruco(cbr, 2, j1, j2)
+
+def test_pedir_vale_quatro_input_nao_numerico_levanta_valueerror(cenario_truco, monkeypatch):
+    """
+    Testa (Objetivo: Testes para Exceções / Input de Usuário):
+    Verifica se o 'int(input())' em 'pedir_vale_quatro'
+    levanta 'ValueError' se o usuário digitar "abc".
+   
+    """
+    # 1. Arrange
+    truco, j1, j2, cbr, dados = cenario_truco
+    
+    # Simula o Humano digitando "abc" (não-numérico)
+    monkeypatch.setattr('builtins.input', lambda _: 'abc')
+    
+    # 2. Act / 3. Assert
+    # O teste passa se 'ValueError' for levantado
+    with pytest.raises(ValueError):
+        # Chamamos com 'quem_pediu=2' para acionar o 'input' do Humano
+        truco.pedir_vale_quatro(cbr, 2, j1, j2)

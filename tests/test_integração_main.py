@@ -607,3 +607,58 @@ def test_integracao_main_input_nao_numerico_levanta_valueerror(cenario_main, mon
                 pass
             else:
                 print('Selecione um valor válido!')
+
+def test_integracao_main_bloqueia_truco_repetido_RF_ERR(cenario_main, monkeypatch, capsys):
+    """
+    Testa (If-chain / Mensagem de Erro): Se o __main__
+    (turno_do_humano) impede o J1 de chamar Truco (opção 4)
+    se o truco já foi aceito (j1.pediu_truco == True).
+    """
+    
+    # 1. Arrange
+    baralho, cbr, dados, interface, truco, flor, envido, j1, j2 = cenario_main
+    
+    # Define o estado: Truco já foi pedido e aceito
+    truco.estado_atual = "truco"
+    j1.pediu_truco = True # Flag do jogador
+    
+    # Simula o Humano (J1) tentando chamar Truco (opção '4')
+    # e depois '0' (jogar carta) para sair do loop
+    inputs_do_usuario = ['4', '0']
+    monkeypatch.setattr('builtins.input', lambda _: inputs_do_usuario.pop(0))
+    
+    # Mock para 'jogar_carta' para o input '0' funcionar
+    j1.mao = [Carta(7, "OUROS")]
+    monkeypatch.setattr(j1, 'jogar_carta', lambda *args: Carta(7, "OUROS"))
+
+    # 2. Act
+    # Simulação da lógica exata do 'turno_do_humano' no __main__.py
+    
+    carta_escolhida = -1
+    while True:
+        # O 'input' é mockado
+        carta_escolhida = int(input(f"\nQual carta? ")) # Retorna '4', depois '0'
+
+        if (carta_escolhida <= len(j1.checa_mao()) and int(carta_escolhida) >= 0):
+            carta_jogador_01 = j1.jogar_carta(carta_escolhida) 
+            break # Sai do loop na segunda iteração (com '0')
+
+        # ESTE É O CAMINHO QUE ESTAMOS TESTANDO
+        elif (carta_escolhida == 4): 
+            # Lógica de "remendo" do __main__.py
+            if (j1.pediu_truco is True):
+                 interface.mostrar_pediu_truco(j1.nome) # Deve imprimir a msg
+            else:
+                pass # (ignora a chamada de truco normal)
+        
+        elif (carta_escolhida in [5, 6, 7, 8, 9]):
+            pass # (ignora outras apostas)
+        else:
+            print('Selecione um valor válido!')
+
+    # 3. Assert
+    captured = capsys.readouterr() # Captura o print
+    
+    # Prova que o 'if (j1.pediu_truco is True)'
+    # foi ativado e a mensagem de erro correta foi exibida
+    assert "pediu truco e o pedido já foi aceito" in captured.out

@@ -179,3 +179,105 @@ def test_falta_envido_aceito_calcula_pontos_da_meta_RN10(cenario_envido, monkeyp
     assert j2.pontos == 0
     assert envido.quem_venceu_envido == 1
     
+
+def test_nao_pode_pedir_envido_duas_vezes(cenario_envido, monkeypatch):
+    """
+    Testa que o Envido não pode ser pedido duas vezes consecutivas (estado_atual != 0)
+    """
+    envido, j1, j2, cbr, dados, iface = cenario_envido
+    monkeypatch.setattr(Bot, 'avaliar_envido', lambda *args: 1)
+
+    # 1ª chamada funciona
+    envido.controlador_envido(cbr, dados, 6, 1, j1, j2, iface)
+    assert envido.estado_atual == 6
+
+    # 2ª chamada é ignorada
+    resultado = envido.controlador_envido(cbr, dados, 6, 1, j1, j2, iface)
+    assert resultado is None
+
+
+def test_nao_pode_pedir_real_envido_bloqueado(cenario_envido, monkeypatch):
+    """
+    Testa que um jogador bloqueado não pode pedir aumento de aposta (bloqueado)
+    """
+    envido, j1, j2, cbr, dados, iface = cenario_envido
+    monkeypatch.setattr(Bot, 'avaliar_envido', lambda *args: 1)
+
+    # J1 pede Envido
+    envido.controlador_envido(cbr, dados, 6, 1, j1, j2, iface)
+    assert envido.jogador_bloqueado == 1
+
+    # J1 tenta pedir Real Envido mas está bloqueado
+    resultado = envido.controlador_envido(cbr, dados, 7, 1, j1, j2, iface)
+    assert resultado is None  # Ignorado
+
+
+def test_envido_recusado_pelo_humano(monkeypatch, cenario_envido):
+    """
+    Testa que o Humano (J1) recusando devolve 1 ponto ao oponente
+    """
+    envido, j1, j2, cbr, dados, iface = cenario_envido
+
+    # Simula o input do Humano recusando (escolha = 0)
+    monkeypatch.setattr('builtins.input', lambda _: '0')
+    
+    # Bot pede Envido
+    envido.controlador_envido(cbr, dados, 6, 2, j1, j2, iface)
+    
+    assert envido.quem_fugiu == 1  # Humano fugiu
+    assert j2.pontos == 1  # Bot ganha 1 ponto
+
+
+def test_input_invalido_no_envido(monkeypatch, cenario_envido):
+    """
+    Testa que valores inválidos em input causam ValueError durante conversão
+    """
+    envido, j1, j2, cbr, dados, iface = cenario_envido
+    
+    # Envia um valor inválido para o input
+    monkeypatch.setattr('builtins.input', lambda _: 'abcd')
+    
+    with pytest.raises(ValueError):
+        envido.controlador_envido(cbr, dados, 6, 2, j1, j2, iface)
+
+
+def test_inverter_jogador_bloqueado():
+    envido = Envido()
+
+    envido.jogador_bloqueado = 1
+    envido.inverter_jogador_bloqueado()
+    assert envido.jogador_bloqueado == 2
+
+    envido.inverter_jogador_bloqueado()
+    assert envido.jogador_bloqueado == 1
+
+
+def test_inicializar_jogador_bloqueado():
+    envido = Envido()
+    
+    envido.inicializar_jogador_bloqueado(2)
+    assert envido.jogador_bloqueado == 2
+
+
+def test_resetar_envido():
+    envido = Envido()
+    envido.jogador_bloqueado = 1
+    envido.quem_fugiu = 2
+    envido.jogador1_pontos = 10
+    envido.valor_envido = 5
+
+    envido.resetar()
+
+    assert envido.jogador_bloqueado == 0
+    assert envido.quem_fugiu == 0
+    assert envido.jogador1_pontos == 0
+    assert envido.valor_envido == 2
+
+
+def test_definir_pontos_jogadores(cenario_envido):
+    envido, j1, j2, cbr, dados, iface = cenario_envido
+
+    envido.definir_pontos_jogadores(jogador1=j1, jogador2=j2)
+
+    assert envido.jogador1_pontos == j1.envido
+    assert envido.jogador2_pontos == j2.envido

@@ -52,3 +52,23 @@ def test_garantir_que_cartas_nao_se_repetem_RNF04(baralho):
     
     # Verificamos se o número de cartas ÚNICAS (usando um 'set') também é 40
     assert len(set(representacao_cartas)) == 40
+
+# Adicione ao final de: tests/test_baralho.py
+
+def test_retirar_carta_de_baralho_vazio_levanta_excecao(baralho):
+    """Testa (Exceção): Tentar retirar 41 cartas levanta IndexError."""
+    # 1. Arrange
+    # A fixture 'baralho' começa com 40 cartas
+    
+    # 2. Act
+    # Retira todas as 40 cartas
+    for _ in range(40):
+        baralho.retirar_carta()
+    
+    # 3. Assert
+    # Garante que o baralho está vazio
+    assert len(baralho.cartas) == 0
+    
+    # Verifica se a 41ª retirada levanta a exceção esperada
+    with pytest.raises(IndexError):
+        baralho.retirar_carta()

@@ -19,12 +19,13 @@ from truco.interface import Interface
 def mock_cbr():
     """Simula o CBR, configurado para sempre 'Aceitar' por padrão."""
     class MockCBR:
-        # MUDE DE: def avaliar_truco(self, *args):
-        def truco(self, *args): # <-- PARA 'truco'
+        
+        # CORREÇÃO: Renomeie 'truco' para 'avaliar_truco'
+        def avaliar_truco(self, *args): 
             return 1  # 1 = Aceitar
         
-        # MUDE DE: def avaliar_envido(self, *args):
-        def envido(self, *args): # <-- PARA 'envido'
+        # CORREÇÃO: Renomeie 'envido' para 'avaliar_envido'
+        def avaliar_envido(self, *args): 
             return 1  # 1 = Aceitar
         
         def jogar_carta(self, *args):
@@ -138,9 +139,9 @@ def cenario_main(monkeypatch):
     
     # Mock do CBR e Dados (para não depender de arquivos)
     class MockCBR:
-        def truco(self, *args): return 1 # Aceitar
-        def envido(self, *args): return 1 # Aceitar
-        def jogar_carta(self, *args): return 0
+        def truco(self, *args): return 1 # Aceitar (Mude de 'truco')
+        def envido(self, *args): return 1 # Aceitar (Mude de 'envido')
+        def carta(self, *args): return 0
     
     class MockDados:
         def __getattr__(self, name):

@@ -94,3 +94,131 @@ def test_jogar_carta_que_nao_esta_na_mao_levanta_excecao():
     # ao tentar jogar a carta no índice 10 (que não existe)
     with pytest.raises(IndexError):
         jogador.jogar_carta(10)
+
+# Adicione ao final de: tests/test_jogador.py
+# (Você precisará de: from truco.carta import Carta)
+
+@pytest.mark.parametrize("mao, pontos_esperados", [
+    ([], 0), # Mão vazia (início do loop)
+    ([Carta(7, "OUROS")], 7), # Mão com 1 carta (início do loop)
+])
+def test_calculo_envido_com_mao_incompleta_RN10(mao, pontos_esperados):
+    """
+    Testa (Loop / Exceção): O que acontece se 'calcula_envido'
+    for chamado com 0 ou 1 carta (limite do loop).
+    (Espera-se que falhe com ValueError: max() de lista vazia).
+    """
+    # 1. Arrange
+    jogador = Jogador("Teste")
+    
+    # 2. Act
+    # O SUT (jogador.py) falha aqui se a mão tem < 2 cartas,
+    # pois a lista 'pontos_envido' fica vazia.
+    pontos_envido = jogador.calcula_envido(mao)
+    
+    # 3. Assert
+    assert pontos_envido == pontos_esperados
+
+def test_jogador_init_estado_inicial_correto():
+    """
+    Testa (Objetivo: Retorno de Função / __init__):
+    Verifica se a classe Jogador é instanciada com os valores padrão corretos.
+    """
+    # 1. Arrange / Act
+    jogador = Jogador("Teste")
+    
+    # 3. Assert
+    assert jogador.nome == "Teste"
+    assert jogador.mao == []
+    assert jogador.pontos == 0
+    assert jogador.rodadas == 0
+    assert jogador.primeiro is False
+    assert jogador.pediu_truco is False
+
+def test_simples_setters_e_getters_RF25():
+    """
+    Testa (Objetivo: Retorno de Função):
+    Verifica a funcionalidade básica de métodos simples de set/get.
+    """
+    # 1. Arrange
+    jogador = Jogador("Teste")
+    
+    # 2. Act & 3. Assert
+    
+    # Teste: adicionar_rodada / checa_mao
+    jogador.adicionar_rodada()
+    assert jogador.rodadas == 1
+    assert jogador.checa_mao() == [] # Mao está vazia, retorna lista vazia
+    
+    # Teste: retorna_pontos_envido (assume init=0)
+    assert jogador.retorna_pontos_envido() == 0
+    
+    # Teste: retorna_pontos_totais (já coberto, mas bom para completar)
+    jogador.adicionar_pontos(5)
+    assert jogador.retorna_pontos_totais() == 5
+
+def test_resetar_limpa_estado_da_rodada():
+    """
+    Testa (Objetivo: Retorno de Função / Estado):
+    Verifica se 'resetar' retorna o objeto ao seu estado padrão
+    após ter sido modificado.
+    """
+    # 1. Arrange (Poluir o estado)
+    jogador = Jogador("Teste")
+    jogador.rodadas = 2
+    jogador.flor = True
+    jogador.pediu_truco = True
+    
+    # 2. Act
+    jogador.resetar()
+    
+    # 3. Assert
+    assert jogador.rodadas == 0
+    assert jogador.mao == []
+    assert jogador.flor is False
+    assert jogador.pediu_truco is False
+
+@pytest.mark.parametrize("mao_size, pediu_truco, checa_flor_result, expected_prints", [
+    # Caminho 1: Tudo ativo (3 cartas, sem truco pedido, tem flor)
+    (3, False, True, ['[4] Truco', '[5] Flor', '[6] Envido', '[9] Ir ao baralho']),
+    # Caminho 2: Apenas Truco e Envido (3 cartas, sem truco pedido, sem flor)
+    (3, False, False, ['[4] Truco', '[6] Envido', '[9] Ir ao baralho']),
+    # Caminho 3: Apenas Envido (3 cartas, truco já pedido)
+    (3, True, True, ['[6] Envido', '[9] Ir ao baralho']),
+    # Caminho 4: Apenas Truco (2 cartas, sem truco pedido)
+    (2, False, False, ['[4] Truco', '[9] Ir ao baralho']),
+    # Caminho 5: Apenas Desistencia (1 carta)
+    (1, False, False, ['[9] Ir ao baralho']),
+])
+def test_mostrar_opcoes_imprime_opcoes_condicionais(cenario_base, monkeypatch, capsys, mao_size, pediu_truco, checa_flor_result, expected_prints):
+    """
+    Testa (Objetivo: Testes para if's / Mensagens de Erro):
+    Verifica se 'mostrar_opcoes' imprime apenas as opções válidas
+    para o estado atual da mão (combinações de IFs).
+   
+    """
+    # 1. Arrange
+    j1, j2, iface, mock_cbr, mock_dados = cenario_base
+    
+    # Mock das dependências (checa_flor)
+    monkeypatch.setattr(j1, 'checa_flor', lambda: checa_flor_result)
+    
+    # Configuração do estado
+    j1.mao = [Carta(1, "E")] * mao_size
+    j1.pediu_truco = pediu_truco
+    j1.flor = False
+    
+    # 2. Act
+    j1.mostrar_opcoes(iface)
+    
+    # 3. Assert
+    captured = capsys.readouterr()
+    output_lines = [line.strip() for line in captured.out.split('\n')]
+    
+    for expected in expected_prints:
+        # Verifica se todas as opções esperadas estão presentes
+        assert expected in output_lines
+    
+    # Verifica se a Flor foi setada para True se ela foi impressa (efeito colateral/bug)
+    if '[5] Flor' in output_lines:
+        assert j1.flor is True

@@ -3,6 +3,9 @@ import pytest
 from truco.jogo import Jogo
 from truco.carta import Carta
 from truco.truco import Truco
+from truco.jogador import Jogador
+from truco.bot import Bot
+from truco.interface import Interface
 
 # --- Testes de Hierarquia de Cartas (RN07) ---
 
@@ -231,3 +234,212 @@ def test_bug_empate_quebra_regra_parda_RN03(cenario_rodadas):
     # 3. O jogo NÃO terminou (pois ninguém tem 2 rodadas),
     #    embora a regra (RN03) diga que deveria ter terminado.
     assert (j1.rodadas == 2 or j2.rodadas == 2) is False
+
+def test_jogo_init_estado_inicial_correto():
+    """
+    Testa (Objetivo: Retorno de Função / __init__):
+    Verifica se a classe Jogo é instanciada com os valores padrão corretos.
+   
+    """
+    # 1. Arrange / Act
+    jogo = Jogo()
+    
+    # 3. Assert
+    assert jogo.rodadas == []
+    assert jogo.trucoPontos == 1
+
+def test_criar_jogador_retorna_jogador_com_mao(cenario_distribuicao):
+    """
+    Testa (Objetivo: Chamada de Função):
+    Verifica se 'criar_jogador' retorna uma instância de Jogador
+    e se a mão do jogador foi criada (tem 3 cartas).
+   
+    """
+    # 1. Arrange
+    baralho, _, _ = cenario_distribuicao
+    jogo = Jogo()
+    
+    # 2. Act
+    jogador_criado = jogo.criar_jogador("Humano Teste", baralho)
+    
+    # 3. Assert
+    assert isinstance(jogador_criado, Jogador)
+    assert len(jogador_criado.mao) == 3
+    assert len(baralho.cartas) == 37 # 40 - 3
+
+def test_criar_bot_retorna_bot_com_mao(cenario_distribuicao):
+    """
+    Testa (Objetivo: Chamada de Função):
+    Verifica se 'criar_bot' retorna uma instância de Bot
+    e se a mão do bot foi criada (tem 3 cartas).
+   
+    """
+    # 1. Arrange
+    baralho, _, _ = cenario_distribuicao
+    jogo = Jogo()
+    
+    # 2. Act
+    bot_criado = jogo.criar_bot("Robô Teste", baralho)
+    
+    # 3. Assert
+    assert isinstance(bot_criado, Bot)
+    assert len(bot_criado.mao) == 3
+    assert len(baralho.cartas) == 37 # 40 - 3
+
+def test_adicionar_rodada_caminhos_if_else(cenario_rodadas):
+    """
+    Testa (Objetivo: Testes para if's):
+    Verifica todos os caminhos de retorno (1, 2, "Erro")
+    da função 'adicionar_rodada'.
+   
+    """
+    # 1. Arrange
+    jogo, j1, j2, c1, c2 = cenario_rodadas
+    
+    # 2. Act / 3. Assert
+    
+    # Caminho 1: Ganhador == carta1
+    retorno1 = jogo.adicionar_rodada(j1, j2, c1, c2, ganhador=c1)
+    assert retorno1 == 1
+    assert j1.rodadas == 1
+    
+    # Caminho 2: Ganhador == carta2
+    retorno2 = jogo.adicionar_rodada(j1, j2, c1, c2, ganhador=c2)
+    assert retorno2 == 2
+    assert j2.rodadas == 1
+    
+    # Caminho 3: Ganhador != carta1 e != carta2 (Else)
+    retorno_erro = jogo.adicionar_rodada(j1, j2, c1, c2, ganhador=None)
+    assert retorno_erro == "Erro"
+
+def test_quem_joga_primeiro_nao_muda_em_empate(cenario_rodadas):
+    """
+    Testa (Objetivo: Testes para if's):
+    Verifica o caminho 'else' (implícito) de 'quem_joga_primeiro',
+    onde o 'ganhador' não é nem c1 nem c2 (ex: "Empate").
+    As flags 'primeiro' não devem mudar.
+   
+    """
+    # 1. Arrange
+    jogo, j1, j2, c1, c2 = cenario_rodadas
+    j1.primeiro = True # Estado inicial
+    j2.primeiro = False # Estado inicial
+    
+    # 2. Act
+    # Passamos um ganhador que não é c1 nem c2
+    jogo.quem_joga_primeiro(j1, j2, c1, c2, ganhador="Empate")
+    
+    # 3. Assert
+    # O estado deve permanecer o mesmo
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+
+def test_quem_inicia_rodada_nao_faz_nada_se_rodada_nao_for_zero(cenario_rodadas):
+    """
+    Testa (Objetivo: Testes para if's):
+    Verifica o 'if' principal de 'quem_inicia_rodada'. Se as rodadas
+    não forem 0, nada deve acontecer.
+   
+    """
+    # 1. Arrange
+    jogo, j1, j2, _, _ = cenario_rodadas
+    
+    # Define o estado inicial (diferente do 'test_alternar_mao')
+    j1.rodadas = 1
+    j2.rodadas = 0
+    j1.primeiro = True
+    j2.primeiro = False
+    
+    # 2. Act
+    jogo.quem_inicia_rodada(j1, j2)
+    
+    # 3. Assert
+    # O 'if' principal (rodadas == 0) falhou, nada deve mudar
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+
+def test_jogador_fugiu_imprime_mensagem_e_reseta_turno(cenario_rodadas, capsys):
+    """
+    Testa (Objetivo: Mensagem de Erro / Retorno de Função):
+    Verifica se 'jogador_fugiu' imprime a mensagem "Jogador fugiu!"
+    e reseta as flags de turno corretamente.
+   
+    """
+    # 1. Arrange
+    jogo, j1, j2, _, _ = cenario_rodadas
+    
+    # Polui o estado do turno (Vez do J2)
+    j1.primeiro = False
+    j2.primeiro = True
+    
+    # 2. Act
+    jogo.jogador_fugiu(j1, j1, j2, 1) # 'jogador' (parâmetro 1) não é usado
+    
+    # 3. Assert
+    captured = capsys.readouterr()
+    
+    # Testa a Mensagem de Erro
+    assert "Jogador fugiu!" in captured.out
+    
+    # Testa o Retorno de Função (flags resetadas)
+    assert j1.primeiro is True
+    assert j2.primeiro is False
+
+@pytest.mark.xfail(reason="BUG: SUT (jogo.py) não trata KeyError se uma carta (ex: 8) não estiver no dicionário 'CARTAS_VALORES'.")
+def test_verificar_carta_vencedora_levanta_keyerror_com_carta_invalida():
+    """
+    Testa (Objetivo: Testes para Exceções):
+    Verifica se 'verificar_carta_vencedora' levanta um KeyError
+    se uma carta inválida (ex: 8 de Copas) for passada,
+    pois '8' não está em 'CARTAS_VALORES'.
+   
+    """
+    # 1. Arrange
+    jogo = Jogo()
+    carta_valida = Carta(4, "OUROS")
+    carta_invalida = Carta(8, "COPAS") # '8' não existe em CARTAS_VALORES
+    
+    # 2. Act / 3. Assert
+    # O teste passa se 'KeyError' for levantado
+    with pytest.raises(KeyError):
+        # A lógica do SUT tentará acessar CARTAS_VALORES['8']
+        jogo.verificar_carta_vencedora(carta_invalida, carta_valida)
+
+def test_verificar_ganhador_chama_interface(cenario_rodadas): # Remova o 'monkeypatch'
+    """
+    Testa (Objetivo: Mensagem de Erro / Spy):
+    Verifica se 'verificar_ganhador' chama corretamente
+    o método 'mostrar_carta_ganhadora' da interface.
+   
+    """
+    # 1. Arrange
+    jogo, j1, j2, c1, c2 = cenario_rodadas
+    
+    # Criamos um "Spy" (espião) para o método da interface
+    foi_chamado = False
+    carta_ganhadora_spy = None
+
+    def spy_mostrar_carta_ganhadora(ganhador):
+        nonlocal foi_chamado, carta_ganhadora_spy
+        foi_chamado = True
+        carta_ganhadora_spy = ganhador
+
+    # Criamos um Mock da Interface
+    class MockInterface:
+        pass # É só um objeto vazio
+    
+    iface = MockInterface()
+    
+    # --- A CORREÇÃO ---
+    # Em vez de 'monkeypatch', nós simplesmente *damos*
+    # ao nosso objeto mock a função de espião.
+    iface.mostrar_carta_ganhadora = spy_mostrar_carta_ganhadora
+    # ------------------
+    
+    # 2. Act
+    # (c1 é mais forte que c2 na fixture cenario_rodadas)
+    jogo.verificar_ganhador(c1, c2, iface) 
+    
+    # 3. Assert
+    assert foi_chamado is True
+    assert carta_ganhadora_spy == c1 # Verifica se a carta correta foi passada
